@@ -6,35 +6,38 @@
     <title>Attendance - NCC Event</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Navbar with Rounded Container -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm rounded-pill mt-3 mx-auto" style="max-width: 95%; padding: 10px 30px;">
         <div class="container-fluid">
-            <a class="navbar-brand" href="index.html">NCC</a>
+            <a class="navbar-brand" href="index.html">
+                <img src="logo.png" alt="Logo" height="50">
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="attendance.html">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
                     <li class="nav-item"><a class="nav-link" href="events.html">Events</a></li>
                 </ul>
+                <a href="tel:+919744466737" class="btn btn-primary ms-3 rounded-pill">+91 9744466737</a>
             </div>
         </div>
     </nav>
-    
+
     <!-- Event Name Modal -->
     <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="eventModalLabel">Enter Event Name</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="text" id="eventName" class="form-control" placeholder="Event Name" required>
@@ -47,100 +50,118 @@
     </div>
 
     <!-- Attendance Table Section -->
-    <section class="container mt-4">
-        <h2>Attendance</h2>
-        <table class="table table-striped">
-            <thead>
+    <section class="container mt-5">
+        <h2 class="text-center mb-4" id="eventTitle">Attendance for: <span id="eventDisplay"></span></h2>
+        <table class="table table-bordered">
+            <thead class="table-dark">
                 <tr>
                     <th>Cadet ID</th>
                     <th>Name</th>
                     <th>Rank</th>
-                    <th>Year</th>
-                    <th>Present</th>
+                    <th>Mark/Unmark</th>
                 </tr>
             </thead>
-            <tbody id="attendanceTableBody">
-                <!-- Data will be populated here -->
+            <tbody id="cadetDataBody">
+                <!-- Cadet data will be populated here -->
             </tbody>
         </table>
-        <button class="btn btn-success" onclick="submitAttendance()">Submit Attendance</button>
+        <div class="text-center">
+            <button class="btn btn-success" onclick="submitAttendance()">Submit Attendance</button>
+        </div>
     </section>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script>
-        let eventName = '';
-        let attendanceData = [];
+        const apiUrl = "https://qa-ncc-1.onrender.com/api/events";  // New API base URL
+        const cadetApiUrl = "https://qa-ncc-1.onrender.com/api/cadets"; // New endpoint to fetch cadets
 
-        function startAttendance() {
-            eventName = document.getElementById('eventName').value;
-            const attendanceTableBody = document.getElementById('attendanceTableBody');
+        // Show the event modal on page load
+        window.addEventListener('load', () => {
+            const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+            eventModal.show();
+        });
 
-            // Sample cadet data - replace this with your actual data retrieval
-            const cadets = [
-                { cadetID: '001', name: 'John Doe', rank: 'Cadet', year: '1st Year' },
-                { cadetID: '002', name: 'Jane Smith', rank: 'Sergeant', year: '2nd Year' },
-                // Add more cadets as needed
-            ];
-
-            // Populate the attendance table
-            cadets.forEach(cadet => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${cadet.cadetID}</td>
-                    <td>${cadet.name}</td>
-                    <td>${cadet.rank}</td>
-                    <td>${cadet.year}</td>
-                    <td>
-                        <input type="checkbox" onchange="updateAttendance('${cadet.cadetID}', this.checked)">
-                    </td>
-                `;
-                attendanceTableBody.appendChild(row);
-            });
-
-            // Close modal after starting attendance
-            const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
-            modal.hide();
-        }
-
-        function updateAttendance(cadetID, isPresent) {
-            const existingCadet = attendanceData.find(data => data.cadetID === cadetID);
-            if (existingCadet) {
-                existingCadet.isPresent = isPresent;
-            } else {
-                attendanceData.push({ cadetID, isPresent });
+        // Load cadets when the modal is opened
+        async function startAttendance() {
+            const eventName = document.getElementById("eventName").value;
+            if (eventName) {
+                document.getElementById("eventDisplay").textContent = eventName;
+                sessionStorage.setItem('currentEvent', eventName);  // Save to session storage
+                const eventModal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
+                eventModal.hide();
+                await loadCadets(); // Load cadets data
             }
         }
 
-        async function submitAttendance() {
+        // Load cadet data from the API
+        async function loadCadets() {
+            const cadetDataBody = document.getElementById("cadetDataBody");
+            cadetDataBody.innerHTML = ''; // Clear any existing data
+
             try {
-                const response = await fetch('http://localhost:3000/api/attendance', {
+                const response = await fetch(cadetApiUrl); // Fetch cadets from backend
+                if (!response.ok) throw new Error('Failed to fetch cadet data');
+
+                const cadets = await response.json();
+
+                // Populate the table with cadet data
+                cadets.forEach(cadet => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${cadet.cadetID}</td>
+                        <td>${cadet.name}</td>
+                        <td>${cadet.rank}</td>
+                        <td><input type="checkbox" class="form-check-input mark-attendance"></td>
+                    `;
+                    cadetDataBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading cadets:', error);
+                cadetDataBody.innerHTML = '<tr><td colspan="4" class="text-danger text-center">Failed to load cadets. Please try again later.</td></tr>';
+            }
+        }
+
+        // Collect attendance data and send it to the backend
+        async function submitAttendance() {
+            const eventName = sessionStorage.getItem('currentEvent');
+            const cadets = document.querySelectorAll('#cadetDataBody tr');
+            const attendanceData = [];
+
+            cadets.forEach(row => {
+                const cadetID = row.children[0].textContent;
+                const name = row.children[1].textContent;
+                const rank = row.children[2].textContent;
+                const isPresent = row.children[3].children[0].checked;
+                attendanceData.push({ cadetID, name, rank, isPresent });
+            });
+
+            try {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        eventName,
-                        attendanceData: attendanceData.map(cadet => ({
-                            cadetID: cadet.cadetID,
-                            name: cadet.name,
-                            rank: cadet.rank,
-                            year: cadet.year,
-                            isPresent: cadet.isPresent
-                        }))
-                    })
+                    body: JSON.stringify({ eventName, attendanceData })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Failed to submit attendance: ' + response.statusText);
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(result.message || "Attendance submitted successfully!");
+                    showSummary(attendanceData); // Show attendance summary
+                } else {
+                    throw new Error("Failed to submit attendance.");
                 }
-
-                const result = await response.json();
-                alert(result.message || 'Attendance submitted successfully!');
             } catch (error) {
-                console.error('Error submitting attendance:', error);
-                alert('Error submitting attendance: ' + error.message + '. Please try again.');
+                console.error("Error:", error);
+                alert("Error submitting attendance. Please try again later.");
             }
         }
+
+        function showSummary(attendanceData) {
+            const presentCount = attendanceData.filter(cadet => cadet.isPresent).length;
+            const totalCount = attendanceData.length;
+            alert(`Attendance Summary:\nPresent: ${presentCount}\nAbsent: ${totalCount - presentCount}`);
+        }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
