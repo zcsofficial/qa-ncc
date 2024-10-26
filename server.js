@@ -77,6 +77,27 @@ app.post('/api/attendance', async (req, res) => {
         res.status(500).json({ message: 'Error submitting attendance', error });
     }
 });
+// Get All Events
+app.get('/api/events', async (req, res) => {
+    try {
+        const events = await Event.find();
+        res.json(events);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching events', error });
+    }
+});
+
+app.get('/api/events/:id', async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        res.json(event);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching event', error });
+    }
+});
 
 // Start Server
 const PORT = process.env.PORT || 3000;
