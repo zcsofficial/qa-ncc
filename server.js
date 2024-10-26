@@ -37,19 +37,19 @@ const Event = mongoose.model('Event', eventSchema); // Event model
 // Ensure collections exist
 const ensureCollections = async () => {
     const collections = await mongoose.connection.db.listCollections().toArray();
-    
+
     // Check and create cadets collection if it doesn't exist
     if (!collections.find(collection => collection.name === 'cadets')) {
         await mongoose.connection.createCollection('cadets');
         console.log('Cadets collection created');
     }
-    
+
     // Check and create events collection if it doesn't exist
     if (!collections.find(collection => collection.name === 'events')) {
         await mongoose.connection.createCollection('events');
         console.log('Events collection created');
     }
-    
+
     // Check and create attendance collection if it doesn't exist
     if (!collections.find(collection => collection.name === 'attendance')) {
         await mongoose.connection.createCollection('attendance');
@@ -90,9 +90,9 @@ app.post('/api/events', async (req, res) => {
 app.post('/api/attendance', async (req, res) => {
     const { eventName, attendanceData } = req.body;
 
-    // Check if attendanceData is provided
-    if (!attendanceData || attendanceData.length === 0) {
-        return res.status(400).json({ message: 'No attendance data provided.' });
+    // Validate input
+    if (!eventName || !attendanceData || !Array.isArray(attendanceData) || attendanceData.length === 0) {
+        return res.status(400).json({ message: 'Invalid input data. Event name and attendance data are required.' });
     }
 
     try {
