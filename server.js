@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -19,20 +18,47 @@ mongoose.connect(mongoURI, {
 
 // Mongoose Schema and Models
 const cadetSchema = new mongoose.Schema({
-    cadetID: String,
-    name: String,
-    rank: String,
-    year: String, // Ensure year is included
+    cadetID: { type: String, required: true },
+    name: { type: String, required: true },
+    rank: { type: String, required: true },
+    year: { type: String, required: true } // Ensure year is included
 });
 
 const eventSchema = new mongoose.Schema({
-    eventName: String,
+    eventName: { type: String, required: true },
     attendanceData: [cadetSchema],
     date: { type: Date, default: Date.now }
 });
 
+// Models
 const Cadet = mongoose.model('Cadet', cadetSchema); // Cadet model
 const Event = mongoose.model('Event', eventSchema); // Event model
+
+// Ensure collections exist
+const ensureCollections = async () => {
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    
+    // Check and create cadets collection if it doesn't exist
+    if (!collections.find(collection => collection.name === 'cadets')) {
+        await mongoose.connection.createCollection('cadets');
+        console.log('Cadets collection created');
+    }
+    
+    // Check and create events collection if it doesn't exist
+    if (!collections.find(collection => collection.name === 'events')) {
+        await mongoose.connection.createCollection('events');
+        console.log('Events collection created');
+    }
+    
+    // Check and create attendance collection if it doesn't exist
+    if (!collections.find(collection => collection.name === 'attendance')) {
+        await mongoose.connection.createCollection('attendance');
+        console.log('Attendance collection created');
+    }
+};
+
+// Check collections on startup
+ensureCollections().catch(console.error);
 
 // Routes
 
@@ -64,14 +90,20 @@ app.post('/api/events', async (req, res) => {
 app.post('/api/attendance', async (req, res) => {
     const { eventName, attendanceData } = req.body;
 
+    // Check if attendanceData is provided
+    if (!attendanceData || attendanceData.length === 0) {
+        return res.status(400).json({ message: 'No attendance data provided.' });
+    }
+
     try {
-        // Example of how you might save this data to an Event model
+        // Create a new event with attendance data
         const newEvent = new Event({
             eventName,
             attendanceData: attendanceData.map(data => ({
                 cadetID: data.cadetID,
                 name: data.name,
                 rank: data.rank,
+                year: data.year, // Ensure year is included
                 isPresent: data.isPresent,
             }))
         });
@@ -83,16 +115,19 @@ app.post('/api/attendance', async (req, res) => {
         res.status(500).json({ message: 'Error saving attendance data', error });
     }
 });
+
 // Get All Events
 app.get('/api/events', async (req, res) => {
     try {
         const events = await Event.find();
         res.json(events);
     } catch (error) {
+        console.error('Error fetching events:', error);
         res.status(500).json({ message: 'Error fetching events', error });
     }
 });
 
+// Get a Single Event by ID
 app.get('/api/events/:id', async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
@@ -101,6 +136,7 @@ app.get('/api/events/:id', async (req, res) => {
         }
         res.json(event);
     } catch (error) {
+        console.error('Error fetching event:', error);
         res.status(500).json({ message: 'Error fetching event', error });
     }
 });
