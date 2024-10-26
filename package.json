@@ -1,0 +1,14 @@
+{
+  "name": "attendance-backend",
+  "version": "1.0.0",
+  "description": "Attendance backend for NCC events using Node.js and MongoDB",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mongoose": "^5.12.3"
+  }
+}
