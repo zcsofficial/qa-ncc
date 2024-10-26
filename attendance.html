@@ -6,28 +6,24 @@
     <title>Attendance - NCC Event</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <!-- Navbar with Rounded Container -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm rounded-pill mt-3 mx-auto" style="max-width: 95%; padding: 10px 30px;">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="index.html">
-                <img src="logo.png" alt="Logo" height="50">
-            </a>
+            <a class="navbar-brand" href="index.html">NCC</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="attendance.html">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
                     <li class="nav-item"><a class="nav-link" href="events.html">Events</a></li>
                 </ul>
-                <a href="tel:+919744466737" class="btn btn-primary ms-3 rounded-pill">+91 9744466737</a>
             </div>
         </div>
     </nav>
@@ -51,10 +47,9 @@
     </div>
 
     <!-- Attendance Table Section -->
-    <section class="container my-5">
-        <h2 class="text-center">Attendance Sheet</h2>
-        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#eventModal">Add Event</button>
-        <table class="table table-striped" id="attendanceTable">
+    <section class="container mt-4">
+        <h2>Attendance</h2>
+        <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Cadet ID</th>
@@ -64,33 +59,29 @@
                     <th>Present</th>
                 </tr>
             </thead>
-            <tbody id="attendanceBody">
-                <!-- Dynamic attendance data will be appended here -->
+            <tbody id="attendanceTableBody">
+                <!-- Data will be populated here -->
             </tbody>
         </table>
-        <button class="btn btn-primary" id="submitAttendanceBtn" style="display: none;">Submit Attendance</button>
-        <div id="error-message" class="text-danger mt-3" style="display: none;"></div>
+        <button class="btn btn-success" onclick="submitAttendance()">Submit Attendance</button>
     </section>
 
     <script>
-        const attendanceData = [];
+        let eventName = '';
+        let attendanceData = [];
 
         function startAttendance() {
-            const eventName = document.getElementById('eventName').value;
-            if (!eventName) {
-                alert('Please enter an event name.');
-                return;
-            }
+            eventName = document.getElementById('eventName').value;
+            const attendanceTableBody = document.getElementById('attendanceTableBody');
 
+            // Sample cadet data - replace this with your actual data retrieval
             const cadets = [
                 { cadetID: '001', name: 'John Doe', rank: 'Cadet', year: '1st Year' },
                 { cadetID: '002', name: 'Jane Smith', rank: 'Sergeant', year: '2nd Year' },
                 // Add more cadets as needed
             ];
 
-            const attendanceBody = document.getElementById('attendanceBody');
-            attendanceBody.innerHTML = ''; // Clear previous attendance data
-
+            // Populate the attendance table
             cadets.forEach(cadet => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -99,61 +90,57 @@
                     <td>${cadet.rank}</td>
                     <td>${cadet.year}</td>
                     <td>
-                        <input type="checkbox" class="form-check-input" onchange="updateAttendance('${cadet.cadetID}', this.checked)">
+                        <input type="checkbox" onchange="updateAttendance('${cadet.cadetID}', this.checked)">
                     </td>
                 `;
-                attendanceBody.appendChild(row);
+                attendanceTableBody.appendChild(row);
             });
 
-            // Show the submit button
-            document.getElementById('submitAttendanceBtn').style.display = 'block';
-
-            // Close the modal
+            // Close modal after starting attendance
             const modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
             modal.hide();
         }
 
         function updateAttendance(cadetID, isPresent) {
-            const existingEntry = attendanceData.find(entry => entry.cadetID === cadetID);
-            if (existingEntry) {
-                existingEntry.isPresent = isPresent;
+            const existingCadet = attendanceData.find(data => data.cadetID === cadetID);
+            if (existingCadet) {
+                existingCadet.isPresent = isPresent;
             } else {
                 attendanceData.push({ cadetID, isPresent });
             }
         }
 
-        document.getElementById('submitAttendanceBtn').addEventListener('click', async () => {
-            const eventName = document.getElementById('eventName').value;
-
-            if (!eventName || attendanceData.length === 0) {
-                document.getElementById('error-message').innerText = 'Please ensure the event name is entered and attendance data is available.';
-                document.getElementById('error-message').style.display = 'block';
-                return;
-            }
-
+        async function submitAttendance() {
             try {
-                const response = await fetch('https://qa-ncc-1.onrender.com/api/attendance', {
+                const response = await fetch('http://localhost:3000/api/attendance', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ eventName, attendanceData }),
+                    body: JSON.stringify({
+                        eventName,
+                        attendanceData: attendanceData.map(cadet => ({
+                            cadetID: cadet.cadetID,
+                            name: cadet.name,
+                            rank: cadet.rank,
+                            year: cadet.year,
+                            isPresent: cadet.isPresent
+                        }))
+                    })
                 });
 
-                const result = await response.json();
-                if (response.ok) {
-                    alert('Attendance submitted successfully!');
-                    location.reload(); // Refresh the page to clear attendance data
-                } else {
-                    throw new Error(result.message || 'Failed to submit attendance');
+                if (!response.ok) {
+                    throw new Error('Failed to submit attendance: ' + response.statusText);
                 }
-            } catch (error) {
-                document.getElementById('error-message').innerText = `Error submitting attendance: ${error.message}. Please try again.`;
-                document.getElementById('error-message').style.display = 'block';
-            }
-        });
-    </script>
 
+                const result = await response.json();
+                alert(result.message || 'Attendance submitted successfully!');
+            } catch (error) {
+                console.error('Error submitting attendance:', error);
+                alert('Error submitting attendance: ' + error.message + '. Please try again.');
+            }
+        }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

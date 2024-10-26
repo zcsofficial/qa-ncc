@@ -37,23 +37,14 @@ const Event = mongoose.model('Event', eventSchema); // Event model
 // Ensure collections exist
 const ensureCollections = async () => {
     const collections = await mongoose.connection.db.listCollections().toArray();
-
-    // Check and create cadets collection if it doesn't exist
-    if (!collections.find(collection => collection.name === 'cadets')) {
-        await mongoose.connection.createCollection('cadets');
-        console.log('Cadets collection created');
-    }
-
-    // Check and create events collection if it doesn't exist
-    if (!collections.find(collection => collection.name === 'events')) {
-        await mongoose.connection.createCollection('events');
-        console.log('Events collection created');
-    }
-
-    // Check and create attendance collection if it doesn't exist
-    if (!collections.find(collection => collection.name === 'attendance')) {
-        await mongoose.connection.createCollection('attendance');
-        console.log('Attendance collection created');
+    
+    // Check and create collections if they don't exist
+    const requiredCollections = ['cadets', 'events'];
+    for (const collection of requiredCollections) {
+        if (!collections.find(c => c.name === collection)) {
+            await mongoose.connection.createCollection(collection);
+            console.log(`${collection.charAt(0).toUpperCase() + collection.slice(1)} collection created`);
+        }
     }
 };
 
@@ -73,19 +64,6 @@ app.get('/api/cadets', async (req, res) => {
     }
 });
 
-// Create a New Event with Attendance Data
-app.post('/api/events', async (req, res) => {
-    try {
-        const { eventName, attendanceData } = req.body;
-        const newEvent = new Event({ eventName, attendanceData });
-        await newEvent.save();
-        res.status(201).json({ message: 'Attendance data saved successfully' });
-    } catch (error) {
-        console.error('Error saving attendance data:', error);
-        res.status(500).json({ message: 'Error saving attendance data', error });
-    }
-});
-
 // Submit Attendance
 app.post('/api/attendance', async (req, res) => {
     const { eventName, attendanceData } = req.body;
@@ -96,14 +74,13 @@ app.post('/api/attendance', async (req, res) => {
     }
 
     try {
-        // Create a new event with attendance data
         const newEvent = new Event({
             eventName,
             attendanceData: attendanceData.map(data => ({
                 cadetID: data.cadetID,
                 name: data.name,
                 rank: data.rank,
-                year: data.year, // Ensure year is included
+                year: data.year, // Include year
                 isPresent: data.isPresent,
             }))
         });
@@ -124,20 +101,6 @@ app.get('/api/events', async (req, res) => {
     } catch (error) {
         console.error('Error fetching events:', error);
         res.status(500).json({ message: 'Error fetching events', error });
-    }
-});
-
-// Get a Single Event by ID
-app.get('/api/events/:id', async (req, res) => {
-    try {
-        const event = await Event.findById(req.params.id);
-        if (!event) {
-            return res.status(404).json({ message: 'Event not found' });
-        }
-        res.json(event);
-    } catch (error) {
-        console.error('Error fetching event:', error);
-        res.status(500).json({ message: 'Error fetching event', error });
     }
 });
 
