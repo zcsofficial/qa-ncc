@@ -1,27 +1,21 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
+
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+app.use(express.json()); // Middleware for parsing JSON bodies
 
 // MongoDB connection
-mongoose.connect('your-mongo-db-uri', {
+mongoose.connect('mongodb+srv://adnankstheredteamlabs:Adnan%4066202@cluster0.qrppz7h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-});
-
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {
-    console.log('Connected to MongoDB');
-});
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 // Cadet Schema
 const cadetSchema = new mongoose.Schema({
-    cadetID: { type: String, required: true },
+    cadetID: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     rank: { type: String, required: true },
     year: { type: Number, required: true }
@@ -33,8 +27,8 @@ const attendanceSchema = new mongoose.Schema({
     eventName: { type: String, required: true },
     attendanceData: [
         {
-            cadetID: String,
-            isPresent: Boolean
+            cadetID: { type: String, required: true },
+            isPresent: { type: Boolean, required: true }
         }
     ]
 });
@@ -46,7 +40,7 @@ app.get('/api/cadets', async (req, res) => {
         const cadets = await Cadet.find();
         res.json(cadets);
     } catch (error) {
-        console.error(error);
+        console.error('Error retrieving cadet data:', error);
         res.status(500).send('Error retrieving cadet data');
     }
 });
@@ -59,7 +53,7 @@ app.post('/api/attendance', async (req, res) => {
         await attendance.save();
         res.status(201).send('Attendance recorded successfully');
     } catch (error) {
-        console.error(error);
+        console.error('Error saving attendance:', error);
         res.status(500).send('Error saving attendance');
     }
 });
@@ -70,7 +64,7 @@ app.get('/api/events', async (req, res) => {
         const events = await Attendance.find();
         res.json(events);
     } catch (error) {
-        console.error(error);
+        console.error('Error retrieving events:', error);
         res.status(500).send('Error retrieving events');
     }
 });
