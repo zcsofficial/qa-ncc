@@ -31,9 +31,21 @@ const eventSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now }
 });
 
-const Event = mongoose.model('Event', eventSchema);
+const Cadet = mongoose.model('Cadet', cadetSchema); // Cadet model
+const Event = mongoose.model('Event', eventSchema); // Event model
 
 // Routes
+
+// Get All Cadets
+app.get('/api/cadets', async (req, res) => {
+    try {
+        const cadets = await Cadet.find(); // Fetch cadets from the database
+        res.json(cadets); // Send cadet data as JSON response
+    } catch (error) {
+        console.error('Error fetching cadets:', error);
+        res.status(500).json({ message: 'Error fetching cadets', error });
+    }
+});
 
 // Create a New Event with Attendance Data
 app.post('/api/events', async (req, res) => {
@@ -45,31 +57,6 @@ app.post('/api/events', async (req, res) => {
     } catch (error) {
         console.error('Error saving attendance data:', error);
         res.status(500).json({ message: 'Error saving attendance data', error });
-    }
-});
-
-// Get All Events
-app.get('/api/events', async (req, res) => {
-    try {
-        const events = await Event.find();
-        res.json(events);
-    } catch (error) {
-        console.error('Error fetching events:', error);
-        res.status(500).json({ message: 'Error fetching events', error });
-    }
-});
-
-// Get Single Event by ID
-app.get('/api/events/:id', async (req, res) => {
-    try {
-        const event = await Event.findById(req.params.id);
-        if (!event) {
-            return res.status(404).json({ message: 'Event not found' });
-        }
-        res.json(event);
-    } catch (error) {
-        console.error('Error fetching event:', error);
-        res.status(500).json({ message: 'Error fetching event', error });
     }
 });
 
