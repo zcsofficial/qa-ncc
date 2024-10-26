@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(cors());
 
 // MongoDB Connection
-const mongoURI = 'mongodb+srv://adnankstheredteamlabs:Adnan%4066202@cluster0.qrppz7h.mongodb.net/myDatabase?retryWrites=true&w=majority&appName=Cluster0';
+const mongoURI = 'mongodb+srv://adnankstheredteamlabs:Adnan%4066202@cluster0.qrppz7h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -19,19 +19,18 @@ mongoose.connect(mongoURI, {
 
 // Mongoose Schema and Models
 const cadetSchema = new mongoose.Schema({
-    cadetID: { type: String, required: true },
-    name: { type: String, required: true },
-    rank: { type: String, required: true },
-    year: { type: Number, required: true }
+    cadetID: String,
+    name: String,
+    rank: String,
+    year: String, // Ensure year is included
 });
 
 const eventSchema = new mongoose.Schema({
-    eventName: { type: String, required: true },
+    eventName: String,
     attendanceData: [cadetSchema],
     date: { type: Date, default: Date.now }
 });
 
-const Cadet = mongoose.model('Cadet', cadetSchema);
 const Event = mongoose.model('Event', eventSchema);
 
 // Routes
@@ -44,6 +43,7 @@ app.post('/api/events', async (req, res) => {
         await newEvent.save();
         res.status(201).json({ message: 'Attendance data saved successfully' });
     } catch (error) {
+        console.error('Error saving attendance data:', error);
         res.status(500).json({ message: 'Error saving attendance data', error });
     }
 });
@@ -54,6 +54,7 @@ app.get('/api/events', async (req, res) => {
         const events = await Event.find();
         res.json(events);
     } catch (error) {
+        console.error('Error fetching events:', error);
         res.status(500).json({ message: 'Error fetching events', error });
     }
 });
@@ -67,17 +68,26 @@ app.get('/api/events/:id', async (req, res) => {
         }
         res.json(event);
     } catch (error) {
+        console.error('Error fetching event:', error);
         res.status(500).json({ message: 'Error fetching event', error });
     }
 });
 
-// Get All Cadets
-app.get('/api/cadets', async (req, res) => {
+// Submit Attendance
+app.post('/api/attendance', async (req, res) => {
     try {
-        const cadets = await Cadet.find();
-        res.json(cadets);
+        const { eventName, attendanceData } = req.body;
+
+        if (!eventName || !attendanceData) {
+            return res.status(400).json({ message: 'Event name and attendance data are required.' });
+        }
+
+        const newEvent = new Event({ eventName, attendanceData });
+        await newEvent.save();
+        res.status(201).json({ message: 'Attendance submitted successfully!' });
     } catch (error) {
-        res.status(500).json({ message: 'Error retrieving cadet data', error });
+        console.error('Error submitting attendance:', error);
+        res.status(500).json({ message: 'Error submitting attendance', error });
     }
 });
 
