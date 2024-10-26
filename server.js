@@ -62,19 +62,25 @@ app.post('/api/events', async (req, res) => {
 
 // Submit Attendance
 app.post('/api/attendance', async (req, res) => {
+    const { eventName, attendanceData } = req.body;
+
     try {
-        const { eventName, attendanceData } = req.body;
+        // Example of how you might save this data to an Event model
+        const newEvent = new Event({
+            eventName,
+            attendanceData: attendanceData.map(data => ({
+                cadetID: data.cadetID,
+                name: data.name,
+                rank: data.rank,
+                isPresent: data.isPresent,
+            }))
+        });
 
-        if (!eventName || !attendanceData) {
-            return res.status(400).json({ message: 'Event name and attendance data are required.' });
-        }
-
-        const newEvent = new Event({ eventName, attendanceData });
         await newEvent.save();
-        res.status(201).json({ message: 'Attendance submitted successfully!' });
+        res.status(201).json({ message: 'Attendance data saved successfully!' });
     } catch (error) {
-        console.error('Error submitting attendance:', error);
-        res.status(500).json({ message: 'Error submitting attendance', error });
+        console.error('Error saving attendance data:', error);
+        res.status(500).json({ message: 'Error saving attendance data', error });
     }
 });
 // Get All Events
