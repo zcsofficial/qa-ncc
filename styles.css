@@ -1,0 +1,51 @@
+/* Reset & Basic Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Hero Section */
+.hero {
+    height: 80vh;
+    background-image: url('');
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+/* Navbar Styles */
+.navbar-brand img {
+    height: 50px;
+}
+
+.navbar .nav-link {
+    color: #333;
+    font-weight: bold;
+}
+
+.navbar .btn {
+    font-weight: bold;
+}
+
+.stats .fa-3x {
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+/* Statistics Section */
+.stats {
+    padding: 50px 0;
+}
+
+.stats h4 {
+    color: #333;
+    font-weight: bold;
+}
+
+.stats p {
+    color: #555;
+}
