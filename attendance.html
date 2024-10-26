@@ -21,7 +21,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link " href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="attendance.html">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
@@ -38,6 +38,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="eventModalLabel">Enter Event Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="text" id="eventName" class="form-control" placeholder="Event Name" required>
@@ -52,7 +53,12 @@
     <!-- Attendance Table Section -->
     <section class="container mt-5">
         <h2 class="text-center mb-4" id="eventTitle">Attendance for: <span id="eventDisplay"></span></h2>
-        <table class="table table-bordered">
+        <div id="loading" class="text-center" style="display: none;">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <table class="table table-bordered" id="cadetTableContainer" style="display: none;">
             <thead class="table-dark">
                 <tr>
                     <th>Cadet ID</th>
@@ -93,19 +99,35 @@
 
         // Fetch and display cadet data from the server
         async function loadCadets() {
-            const response = await fetch('https://qa-ncc.onrender.com/api/cadets');
-            const cadets = await response.json();
-            const cadetTable = document.getElementById('cadetTable');
+            const loading = document.getElementById('loading');
+            const cadetTableContainer = document.getElementById('cadetTableContainer');
+            loading.style.display = 'block'; // Show loading spinner
 
-            cadetTable.innerHTML = cadets.map(cadet => `
-                <tr>
-                    <td>${cadet.cadetID}</td>
-                    <td>${cadet.name}</td>
-                    <td>${cadet.rank}</td>
-                    <td>${cadet.year}</td>
-                    <td><input type="checkbox" class="form-check-input mark-attendance" data-cadetid="${cadet.cadetID}"></td>
-                </tr>
-            `).join('');
+            try {
+                const response = await fetch('https://qa-ncc-1.onrender.com/api/cadets');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const cadets = await response.json();
+                const cadetTable = document.getElementById('cadetTable');
+
+                cadetTable.innerHTML = cadets.map(cadet => `
+                    <tr>
+                        <td>${cadet.cadetID}</td>
+                        <td>${cadet.name}</td>
+                        <td>${cadet.rank}</td>
+                        <td>${cadet.year}</td>
+                        <td><input type="checkbox" class="form-check-input mark-attendance" data-cadetid="${cadet.cadetID}"></td>
+                    </tr>
+                `).join('');
+
+                cadetTableContainer.style.display = 'table'; // Show the table after data is loaded
+            } catch (error) {
+                console.error('Error fetching cadets:', error);
+                alert('Failed to load cadet data. Please try again later.');
+            } finally {
+                loading.style.display = 'none'; // Hide loading spinner
+            }
         }
 
         // Collect attendance data and submit to the backend
@@ -117,16 +139,21 @@
                 isPresent: cadet.checked
             }));
 
-            const response = await fetch('https://qa-ncc.onrender.com/api/attendance', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ eventName, attendanceData })
-            });
+            try {
+                const response = await fetch('https://qa-ncc-1.onrender.com/api/attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eventName, attendanceData })
+                });
 
-            if (response.ok) {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
                 alert("Attendance submitted successfully!");
-            } else {
-                alert("Error submitting attendance.");
+            } catch (error) {
+                console.error('Error submitting attendance:', error);
+                alert("Error submitting attendance. Please try again.");
             }
         }
     </script>
