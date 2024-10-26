@@ -7,6 +7,46 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .hero {
+            background: url('hero-image.jpg') no-repeat center center/cover;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery {
+            height: 400px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gallery img {
+            height: 100%;
+            width: auto;
+            position: absolute;
+            animation: slide 20s infinite;
+        }
+
+        @keyframes slide {
+            0% { left: 0; }
+            10% { left: 0; }
+            20% { left: -100%; }
+            30% { left: -100%; }
+            40% { left: -200%; }
+            50% { left: -200%; }
+            60% { left: -300%; }
+            70% { left: -300%; }
+            80% { left: -400%; }
+            90% { left: -400%; }
+            100% { left: 0; }
+        }
+
+        .stats h4 {
+            font-size: 2.5rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -21,7 +61,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link " href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="attendance.html">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
@@ -33,7 +73,7 @@
     </nav>
 
     <!-- Hero Section -->
-    <header class="hero text-center text-white d-flex align-items-center justify-content-center">
+    <header class="hero text-center text-white">
         <div>
             <h1 class="display-4">Tales from My Journey</h1>
             <p class="lead">I open the pages of my life to share stories of adventure, insights gained along the way, and the myriad emotions that paint the canvas of my existence.</p>
@@ -48,25 +88,33 @@
                 <div class="col-md-3">
                     <i class="fas fa-calendar-alt fa-3x mb-2"></i>
                     <h4>365</h4>
-                    <p>Follow Every Day</p>
+                    <p>Days of Training</p>
                 </div>
                 <div class="col-md-3">
                     <i class="fas fa-plane fa-3x mb-2"></i>
                     <h4>20+</h4>
-                    <p>Travels</p>
+                    <p>Adventure Camps</p>
                 </div>
                 <div class="col-md-3">
                     <i class="fas fa-users fa-3x mb-2"></i>
-                    <h4>3</h4>
-                    <p>Family Size</p>
+                    <h4>500</h4>
+                    <p>Total Cadets</p>
                 </div>
                 <div class="col-md-3">
-                    <i class="fas fa-dollar-sign fa-3x mb-2"></i>
-                    <h4>$0</h4>
-                    <p>Follow For Free</p>
+                    <i class="fas fa-award fa-3x mb-2"></i>
+                    <h4>15+</h4>
+                    <p>Awards Won</p>
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery">
+        <img src="c1.jpg" alt="Cadet 1">
+        <img src="c2.jpg" alt="Cadet 2">
+        <img src="c3.jpg" alt="Cadet 3">
+        <img src="c1.jpg" alt="Cadet 4">
     </section>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
